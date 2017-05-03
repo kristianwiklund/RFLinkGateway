@@ -2,6 +2,7 @@ import json
 import logging
 import multiprocessing
 import time
+import os
 
 import tornado.gen
 import tornado.ioloop
@@ -31,9 +32,10 @@ def main():
     # messages written to device
     commandQ = multiprocessing.Queue()
 
+    config_file = os.getenv('RFLINK_CONF_FILE', 'config.json')
     config = {}
     try:
-        with open('config.json') as json_data:
+        with open(config_file) as json_data:
             config = json.load(json_data)
     except Exception as e:
         logger.error("Config load failed")
