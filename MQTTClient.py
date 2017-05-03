@@ -21,6 +21,8 @@ class MQTTClient(multiprocessing.Process):
             self.logger.info("Connection with credentials (user: %s).", config['mqtt_user'])
             self._mqttConn.username_pw_set(username=config['mqtt_user'], password=config['mqtt_password'])
         self._mqttConn.connect(config['mqtt_host'], port=config['mqtt_port'], keepalive=120)
+
+        self._mqttConn.on_connect = self._on_connect
         self._mqttConn.on_disconnect = self._on_disconnect
         self._mqttConn.on_publish = self._on_publish
         self._mqttConn.on_message = self._on_message
@@ -28,6 +30,12 @@ class MQTTClient(multiprocessing.Process):
     def close(self):
         self.logger.info("Closing connection")
         self._mqttConn.disconnect()
+
+    def _on_connect(self, client, userdata, flags, rc):
+        if rc == 0:
+            self.logger.info("Connected to broker. Return code: %d" % rc)
+        else:
+            self.logger.warning("An error occured on connect. Return code: %d " % rc)
 
     def _on_disconnect(self, client, userdata, rc):
         if rc != 0:
