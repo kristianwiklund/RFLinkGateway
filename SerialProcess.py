@@ -4,7 +4,6 @@ import time
 
 import serial
 
-
 #TODO keepalive i obsluga resetu
 
 
@@ -23,6 +22,8 @@ class SerialProcess(multiprocessing.Process):
         self.connect()
 
         self.processing_exception = config['rflink_direct_output_params']
+        self.ignored_devices = config['rflink_ignored_devices']
+        self.logger.info("Ignoring devices: %s", self.ignored_devices)
 
     def close(self):
         self.sp.close()
@@ -31,31 +32,37 @@ class SerialProcess(multiprocessing.Process):
     def prepare_output(self, data_in):
         out = []
         data = data_in.decode("ascii").replace(";\r\n", "").split(";")
-        self.logger.debug("Received message:%s" % (data))
+
+        if len(data) > 1 and data[1] == '00':
+            self.logger.info("%s" % (data[2]))
+        else:
+            self.logger.debug("Received message:%s" % (data))
+
         if len(data) > 3 and data[0] == '20':
-            family = data[2]
             deviceId = data[3].split("=")[1]
-            d = {}
-            for t in data[4:]:
-                token = t.split("=")
-                d[token[0]] = token[1]
-            for key in d:
-                if key in self.processing_exception:
-                    val = d[key]
-                else:
-                    val = int(d[key], 16) / 10
-                topic_out = "%s/%s/READ/%s" % (family, deviceId, key)
-                data_out = {
-                    'method': 'publish',
-                    'topic': topic_out,
-                    'family': family,
-                    'deviceId': deviceId,
-                    'param': key,
-                    'payload': val,
-                    'qos': 1,
-                    'timestamp': time.time()
-                }
-                out = out + [data_out]
+            if deviceId not in self.ignored_devices:
+                family = data[2]
+                d = {}
+                for t in data[4:]:
+                    token = t.split("=")
+                    d[token[0]] = token[1]
+                for key in d:
+                    if key in self.processing_exception:
+                        val = d[key]
+                    else:
+                        val = int(d[key], 16) / 10
+                    topic_out = "%s/%s/R/%s" % (family, deviceId, key)
+                    data_out = {
+                        'method': 'publish',
+                        'topic': topic_out,
+                        'family': family,
+                        'deviceId': deviceId,
+                        'param': key,
+                        'payload': val,
+                        'qos': 1,
+                        'timestamp': time.time()
+                    }
+                    out = out + [data_out]
         return out
 
     def prepare_input(self, task):
