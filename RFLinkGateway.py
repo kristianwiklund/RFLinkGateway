@@ -12,11 +12,29 @@ from tornado.options import options
 import MQTTClient
 import SerialProcess
 
+log_level = os.getenv('RFLINK_LOG_LEVEL', 'INFO')
+if logging.getLevelName(log_level) is not None:
+    default_log_level = logging.getLevelName(log_level)
+else:
+    default_log_level = logging.INFO
+
+file_log_level = default_log_level
+stream_log_level = default_log_level
+
+log_level = os.getenv('RFLINK_FILE_LOG_LEVEL', 'INFO')
+if logging.getLevelName(log_level) is not None:
+    file_log_level = logging.getLevelName(log_level)
+
+log_level = os.getenv('RFLINK_STREAM_LOG_LEVEL', 'INFO')
+if logging.getLevelName(log_level) is not None:
+    stream_log_level = logging.getLevelName(log_level)
+
 logger = logging.getLogger('RFLinkGW')
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(funcName)s - %(levelname)s - %(message)s')
-logger.setLevel(logging.INFO)
-fh = logging.FileHandler('/var/log/RFLinkGateway.log')
-fh.setLevel(logging.INFO)
+logger.setLevel(default_log_level)
+
+fh = logging.FileHandler(os.getenv('RFLINK_LOG_FILE', '/var/log/RFLinkGateway.log'))
+fh.setLevel(file_log_level)
 fh.setFormatter(formatter)
 logger.addHandler(fh)
 
@@ -24,7 +42,6 @@ ch = logging.StreamHandler()
 ch.setFormatter(formatter)
 ch.setLevel(logging.DEBUG)
 logger.addHandler(ch)
-
 
 def main():
     # messages read from device
@@ -59,3 +76,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
