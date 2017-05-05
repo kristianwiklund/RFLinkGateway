@@ -1,4 +1,5 @@
-#RFLink Gateway to MQTT
+RFLink Gateway to MQTT
+----------------------
 
 ##Purpose
 Bridge between RFLink Gateway and MQTT broker.
@@ -35,19 +36,21 @@ Whole configuration is located in config.json file.
 {
   "mqtt_host": "your.mqtt.host",
   "mqtt_port": 1883,
-  "mqtt_prefix": "/data/RFLINK",
+  "mqtt_prefix": "rflink",
   "rflink_tty_device": "/dev/ttyUSB0",
-  "rflink_direct_output_params": ["BAT", "CMD", "SET_LEVEL", "SWITCH", "HUM", "CHIME", "PIR", "SMOKEALERT"]
+  "rflink_direct_output_params": ["BAT", "CMD", "SET_LEVEL", "SWITCH", "HUM", "CHIME", "PIR", "SMOKEALERT"],
+  "rflink_ignored_devices": ["CD23", "12EA"]
 }
 ```
 
 config param | meaning
 -------------|---------
-| mqtt_host | MQTT broker host |
+| mqtt_host | MQTT broker host|
 | mqtt_port | MQTT broker port|
-| mqtt_prefix | prefix for publish and subscribe topic|
-| rflink_tty_device | Arduino tty device |
-| rflink_ignored_devices | Parameters transferred to MQTT without any processing|
+| mqtt_prefix | Prefix for publish and subscribe topic (no slash at the end) |
+| rflink_tty_device | Arduino tty device|
+| rflink_direct_output_params | Parameters transferred to MQTT without any processing|
+| rflink_ignored_devices | Devices not taken into account when received|
 
 ##Output data
 Application pushes informations to MQTT broker in following format:
@@ -60,7 +63,7 @@ Every change should be published to topic:
 
 `/data/RFLINK/TriState/8556a8/W/1 ON`
 
-
 ##References
 - RFLink Gateway project http://www.nemcon.nl/blog2/
 - RFLink Gateway protocol http://www.nemcon.nl/blog2/protref
+
