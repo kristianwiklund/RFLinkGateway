@@ -85,8 +85,11 @@ class SerialProcess(multiprocessing.Process):
             try:
                 if not self.commandQ.empty():
                     task = self.commandQ.get()
-                    # send it to the serial device
-                    self.sp.write(self.prepare_input(task).encode('ascii'))
+                    # send it to the serial device if not in the devices ignored list
+                    if task['deviceId'] not in self.ignored_devices:
+                        self.sp.write(self.prepare_input(task).encode('ascii'))
+                    else:
+                        self.logger.debug('Nothing sent to serial: deviceId (%s) is in the devices ignored list.' % (task['deviceId']))
             except Exception as e:
                 self.logger.error("Send error:%s" % (format(e)))
             try:
