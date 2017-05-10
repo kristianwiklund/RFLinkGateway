@@ -58,7 +58,7 @@ class MQTTClient(multiprocessing.Process):
             'payload': message.payload.decode('ascii'),
             'qos': 1
         }
-	self.commandQ.put(data_out)
+        self.commandQ.put(data_out)
 
     def publish(self, task):
         topic = "%s/%s/%s/R/%s" % (self.mqttDataPrefix, task['family'], task['deviceId'], task['param'])
