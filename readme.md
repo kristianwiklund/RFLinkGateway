@@ -33,7 +33,16 @@ RFLink Gateway and sent to 433 MHz.
 Configuration
 ----------------------
 
-Whole configuration is located in config.json file.
+In order to start the gateway, a few parameters could be set, as ENV variables:
+
+| RFLINK_CONF_FILE | The absolute path to the configuration (config.json) file | Default to config.json |
+| RFLINK_LOG_LEVEL | Default log level | Default to 'INFO' |
+| RFLINK_FILE_LOG_LEVEL | Log level for the file appender | Default to 'INFO' |
+| RFLINK_STREAM_LOG_LEVEL | Log level for the stream appender | Default to 'INFO' |
+| RFLINK_LOG_FILE | Path to the log file (file appender) | /var/log/RFLinkGateway.log |
+
+
+Then, the configuration of the gateway itself can be defined in the JSON configuration file:
 
 ```json
 {
@@ -46,14 +55,14 @@ Whole configuration is located in config.json file.
 }
 ```
 
-config param | meaning
+Config param | Meaning
 -------------|---------
-| mqtt_host | MQTT broker host|
-| mqtt_port | MQTT broker port|
+| mqtt_host | MQTT broker host |
+| mqtt_port | MQTT broker port |
 | mqtt_prefix | Prefix for publish and subscribe topic (no slash at the end) |
-| rflink_tty_device | Arduino tty device|
-| rflink_direct_output_params | Parameters transferred to MQTT without any processing|
-| rflink_ignored_devices | Devices not taken into account when received|
+| rflink_tty_device | RFLink tty device |
+| rflink_direct_output_params | Parameters transferred to MQTT without any processing |
+| rflink_ignored_devices | Devices not taken into account (for both read and write) |
 
 Output data
 ----------------------
@@ -71,4 +80,3 @@ References
 ----------------------
 - RFLink Gateway project http://www.nemcon.nl/blog2/
 - RFLink Gateway protocol http://www.nemcon.nl/blog2/protref
-
