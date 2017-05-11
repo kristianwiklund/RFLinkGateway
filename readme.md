@@ -35,6 +35,8 @@ Configuration
 
 In order to start the gateway, a few parameters could be set, as ENV variables:
 
+Env variable | Meaning | Default value
+-------------|---------|---------
 | RFLINK_CONF_FILE | The absolute path to the configuration (config.json) file | Default to config.json |
 | RFLINK_LOG_LEVEL | Default log level | Default to 'INFO' |
 | RFLINK_FILE_LOG_LEVEL | Log level for the file appender | Default to 'INFO' |
