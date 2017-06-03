@@ -31,7 +31,8 @@ class SerialProcess(multiprocessing.Process):
 
     def prepare_output(self, data_in):
         out = []
-        data = data_in.decode("ascii").replace(";\r\n", "").split(";")
+        msg = data_in.decode("ascii")
+        data = msg.replace(";\r\n", "").split(";")
 
         if len(data) > 1 and data[1] == '00':
             self.logger.info("%s" % (data[2]))
@@ -39,10 +40,12 @@ class SerialProcess(multiprocessing.Process):
             self.logger.debug("Received message:%s" % (data))
 
         if len(data) > 3 and data[0] == '20':
-            deviceId = data[3].split("=")[1]
-            if deviceId not in self.ignored_devices:
-                family = data[2]
-                d = {}
+            family = data[2]
+            deviceId = data[3].split("=")[1]  # TODO: For some debug messages there is no =
+            if (deviceId not in self.ignored_devices and
+                family not in self.ignored_devices and
+                "%s/%s" % (family, deviceId) not in self.ignored_devices):
+                d = {'message': msg}
                 for t in data[4:]:
                     token = t.split("=")
                     d[token[0]] = token[1]
