@@ -33,13 +33,13 @@ class MQTTClient(multiprocessing.Process):
 
     def _on_connect(self, client, userdata, flags, rc):
         if rc == 0:
-            self.logger.info("Connected to broker. Return code: %d" % rc)
+            self.logger.info("Connected to broker. Return code: %s" % mqtt.connack_string(rc))
         else:
-            self.logger.warning("An error occured on connect. Return code: %d " % rc)
+            self.logger.warning("An error occured on connect. Return code: %s " % mqtt.connack_string(rc))
 
     def _on_disconnect(self, client, userdata, rc):
         if rc != 0:
-            self.logger.error("Unexpected disconnection.")
+            self.logger.error("Unexpected disconnection. Return code: %s" % mqtt.connack_string(rc))
             self._mqttConn.reconnect()
 
     def _on_publish(self, client, userdata, mid):
