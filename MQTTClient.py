@@ -15,11 +15,17 @@ class MQTTClient(multiprocessing.Process):
         self.messageQ = messageQ
         self.commandQ = commandQ
 
+        self.config = config
+        self.auth = None
+        self.host = config['mqtt_host']
+        self.port = config['mqtt_port']
+
         self.mqttDataPrefix = config['mqtt_prefix']
         self._mqttConn = mqtt.Client(client_id='RFLinkGateway')
         if config['mqtt_user'] is not None:
             self.logger.info("Connection with credentials (user: %s).", config['mqtt_user'])
             self._mqttConn.username_pw_set(username=config['mqtt_user'], password=config['mqtt_password'])
+            self.auth = {'username': config['mqtt_user'], 'password': config['mqtt_password']}
         self._mqttConn.connect(config['mqtt_host'], port=config['mqtt_port'], keepalive=120)
 
         self._mqttConn.on_connect = self._on_connect
@@ -33,13 +39,13 @@ class MQTTClient(multiprocessing.Process):
 
     def _on_connect(self, client, userdata, flags, rc):
         if rc == 0:
-            self.logger.info("Connected to broker. Return code: %d" % rc)
+            self.logger.info("Connected to broker. Return code: %s" % mqtt.connack_string(rc))
         else:
-            self.logger.warning("An error occured on connect. Return code: %d " % rc)
+            self.logger.warning("An error occured on connect. Return code: %s " % mqtt.connack_string(rc))
 
     def _on_disconnect(self, client, userdata, rc):
         if rc != 0:
-            self.logger.error("Unexpected disconnection.")
+            self.logger.error("Unexpected disconnection. Return code: %s" % mqtt.connack_string(rc))
             self._mqttConn.reconnect()
 
     def _on_publish(self, client, userdata, mid):
@@ -63,8 +69,9 @@ class MQTTClient(multiprocessing.Process):
     def publish(self, task):
         topic = "%s/%s/%s/R/%s" % (self.mqttDataPrefix, task['family'], task['deviceId'], task['param'])
         try:
-            self._mqttConn.publish(topic, payload=task['payload'])
             self.logger.debug('Sending:%s' % (task))
+            #self._mqttConn.publish(topic, payload=task['payload'])
+            publish.single(topic, payload=task['payload'], hostname=self.host, auth=self.auth, port=self.port)
         except Exception as e:
             self.logger.error('Publish problem: %s' % (e))
             self.messageQ.put(task)

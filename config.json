@@ -7,6 +7,7 @@
   "mqtt_message_timeout": 60,
   "rflink_tty_device": "/dev/ttyUSB0",
   "rflink_direct_output_params": [
+    "message",
     "BAT",
     "CMD",
     "SET_LEVEL",
@@ -16,5 +17,10 @@
     "PIR",
     "SMOKEALERT"
   ],
-  "rflink_ignored_devices": []
+  "rflink_ignored_devices": [
+    "Friedland", 
+    "Oregon Temp/FD10",
+    "BL999",
+    "RTS"
+  ]
 }
