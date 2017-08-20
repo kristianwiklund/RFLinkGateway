@@ -53,7 +53,7 @@ class SerialProcess(multiprocessing.Process):
                         if key in self.processing_exception:
                             val = d[key]
                         else:
-                            val = int(d[key], 16) / 10
+                            val = int(d[key], 16) / 10.0
                         topic_out = "%s/%s/R/%s" % (family, deviceId, key)
                         data_out = {
                             'action': 'NCC',
@@ -61,7 +61,7 @@ class SerialProcess(multiprocessing.Process):
                             'family': family,
                             'deviceId': deviceId,
                             'param': key,
-                            'payload': val,
+                            'payload': str(val),
                             'qos': 1,
                             'timestamp': time.time()
                         }

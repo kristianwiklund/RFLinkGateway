@@ -13,6 +13,7 @@
     "SET_LEVEL",
     "SWITCH",
     "HUM",
+    "HSTATUS",
     "CHIME",
     "PIR",
     "SMOKEALERT"
