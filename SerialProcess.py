@@ -39,37 +39,53 @@ class SerialProcess(multiprocessing.Process):
         else:
             self.logger.debug("Received message:%s" % (data))
 
-        if len(data) > 3 and data[0] == '20':
-            family = data[2]
-            deviceId = data[3].split("=")[1]  # TODO: For some debug messages there is no =
-            if (deviceId not in self.ignored_devices and
-                family not in self.ignored_devices and
-                "%s/%s" % (family, deviceId) not in self.ignored_devices):
-                d = {'message': msg}
-                for t in data[4:]:
-                    token = t.split("=")
-                    d[token[0]] = token[1]
-                for key in d:
-                    if key in self.processing_exception:
-                        val = d[key]
-                    else:
-                        val = int(d[key], 16) / 10
-                    topic_out = "%s/%s/R/%s" % (family, deviceId, key)
-                    data_out = {
-                        'method': 'publish',
-                        'topic': topic_out,
-                        'family': family,
-                        'deviceId': deviceId,
-                        'param': key,
-                        'payload': val,
-                        'qos': 1,
-                        'timestamp': time.time()
-                    }
-                    out = out + [data_out]
+            if len(data) > 3 and data[0] == '20' and data[2].split("=")[0] != 'VER' : # Special Control Command 'VERSION' returns a len=5 data object. This trick is necessary... but not very clean
+                family = data[2]
+                deviceId = data[3].split("=")[1]  # TODO: For some debug messages there is no =
+                if (deviceId not in self.ignored_devices and
+                    family not in self.ignored_devices and
+                    "%s/%s" % (family, deviceId) not in self.ignored_devices):
+                    d = {'message': msg}
+                    for t in data[4:]:
+                        token = t.split("=")
+                        d[token[0]] = token[1]
+                    for key in d:
+                        if key in self.processing_exception:
+                            val = d[key]
+                        else:
+                            val = int(d[key], 16) / 10
+                        topic_out = "%s/%s/R/%s" % (family, deviceId, key)
+                        data_out = {
+                            'action': 'NCC',
+                            'topic': topic_out,
+                            'family': family,
+                            'deviceId': deviceId,
+                            'param': key,
+                            'payload': val,
+                            'qos': 1,
+                            'timestamp': time.time()
+                        }
+                        out = out + [data_out]
+            elif (len(data) == 3 and data[0] == '20') or (len(data) > 3 and data[0] == '20' and data[2].split("=")[0] == 'VER'):
+                payload = ";".join(data[2:])
+                data_out = {
+                            'action': 'SCC',
+                            'topic': "_COMMAND/OUT",
+                            'family': '',
+                            'deviceId': '',
+                            'param': '',
+                            'payload': payload,
+                            'qos': 1,
+                            'timestamp': time.time()
+                }
+                out = [data_out]
         return out
 
     def prepare_input(self, task):
-        out_str =  '10;%s;%s;%s;%s;\n' % (task['family'], task['deviceId'], task['param'], task['payload'])
+        if task['action'] == 'SCC':
+            out_str = '10;%s;\n' % task['payload']
+        else:
+            out_str = '10;%s;%s;%s;%s;\n' % (task['family'], task['deviceId'], task['param'], task['payload'])
         self.logger.debug('Sending to serial:%s' % (out_str))
         return out_str
 

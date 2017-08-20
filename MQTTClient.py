@@ -52,37 +52,47 @@ class MQTTClient(multiprocessing.Process):
         self.logger.debug("Message " + str(mid) + " published.")
 
     def _on_message(self, client, userdata, message):
-        self.logger.debug("Message received: %s" % (message))
-
-        data = message.topic.replace(self.mqttDataPrefix + "/", "").split("/")
-        data_out = {
-            'method': 'subscribe',
-            'topic': message.topic,
-            'family': data[0],
-            'deviceId': data[1],
-            'param': data[3],
-            'payload': message.payload.decode('ascii'),
-            'qos': 1
-        }
+        if message.topic == (self.mqttDataPrefix + "/_COMMAND/IN"):
+            payload = message.payload.decode('ascii')
+            self.logger.debug('Special Control Command received: %s' % (payload))
+            data_out = {
+                'action': 'SCC',
+                'topic': message.topic,
+                'family': '',
+                'deviceId': '',
+                'param': '',
+                'payload': payload,
+                'qos': 1
+             }
+        else:
+            self.logger.debug("Message received on topic: %s" % (message.topic))
+            data = message.topic.replace(self.mqttDataPrefix + "/", "").split("/")
+            data_out = {
+                'action': 'NCC',
+                'topic': message.topic,
+                'family': data[0],
+                'deviceId': data[1],
+                'param': data[3],
+                'payload': message.payload.decode('ascii'),
+                'qos': 1
+            }
         self.commandQ.put(data_out)
 
     def publish(self, task):
-        topic = "%s/%s/%s/R/%s" % (self.mqttDataPrefix, task['family'], task['deviceId'], task['param'])
+        topic = "%s/%s" % (self.mqttDataPrefix, task['topic'])
         try:
             self.logger.debug('Sending:%s' % (task))
-            #self._mqttConn.publish(topic, payload=task['payload'])
             publish.single(topic, payload=task['payload'], hostname=self.host, auth=self.auth, port=self.port)
         except Exception as e:
             self.logger.error('Publish problem: %s' % (e))
             self.messageQ.put(task)
 
     def run(self):
-        self._mqttConn.subscribe("%s/+/+/W/+" % self.mqttDataPrefix)
+        self._mqttConn.subscribe([ ("%s/+/+/W/+" % self.mqttDataPrefix, 2), ("%s/_COMMAND/IN" % self.mqttDataPrefix, 2) ])
         while True:
             if not self.messageQ.empty():
                 task = self.messageQ.get()
-                if task['method'] == 'publish':
-                    self.publish(task)
+                self.publish(task)
             else:
                 time.sleep(0.01)
             self._mqttConn.loop()
