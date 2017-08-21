@@ -52,7 +52,7 @@ Then, the configuration of the gateway itself can be defined in the JSON configu
   "mqtt_port": 1883,
   "mqtt_prefix": "rflink",
   "rflink_tty_device": "/dev/ttyUSB0",
-  "rflink_direct_output_params": ["BAT", "CMD", "SET_LEVEL", "SWITCH", "HUM", "CHIME", "PIR", "SMOKEALERT"],
+  "rflink_direct_output_params": ["BAT", "CMD", "SET_LEVEL", "SWITCH", "HUM", "HSTATUS", "CHIME", "PIR", "SMOKEALERT"],
   "rflink_ignored_devices": ["CD23", "12EA"]
 }
 ```
@@ -77,6 +77,13 @@ Every change should be published to topic:
 [mqtt_prefix]/[device_type]/[device_id]/W/[switch_ID]
 
 `rflink/TriState/8556a8/W/1 ON`
+
+
+Special Control Commands
+----------------------
+
+It is now possible to send Special Control Command (ex. 10;PING) to $mqtt_refix/_COMMAND/IN and receive the response on $mqtt_prefix/_COMMAND/OUT.
+
 
 References
 ----------------------
