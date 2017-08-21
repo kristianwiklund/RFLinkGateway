@@ -79,9 +79,14 @@ class MQTTClient(multiprocessing.Process):
         self.commandQ.put(data_out)
 
     def publish(self, task):
-        topic = "%s/%s" % (self.mqttDataPrefix, task['topic'])
+        if len(task['family']) > 0:
+            subtopic = "%s/%s/R/%s" % (task['family'], task['deviceId'], task['param'])
+        else:
+            subtopic = "_COMMAND/OUT"
+        topic = "%s/%s" % (self.mqttDataPrefix, subtopic)
+
         try:
-            self.logger.debug('Sending:%s' % (task))
+            self.logger.debug('Sending:%s to %s' % (task, topic))
             publish.single(topic, payload=task['payload'], hostname=self.host, auth=self.auth, port=self.port)
         except Exception as e:
             self.logger.error('Publish problem: %s' % (e))

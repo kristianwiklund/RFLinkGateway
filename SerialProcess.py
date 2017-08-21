@@ -54,10 +54,9 @@ class SerialProcess(multiprocessing.Process):
                             val = d[key]
                         else:
                             val = int(d[key], 16) / 10.0
-                        topic_out = "%s/%s/R/%s" % (family, deviceId, key)
                         data_out = {
                             'action': 'NCC',
-                            'topic': topic_out,
+                            'topic': '',
                             'family': family,
                             'deviceId': deviceId,
                             'param': key,
@@ -70,7 +69,7 @@ class SerialProcess(multiprocessing.Process):
                 payload = ";".join(data[2:])
                 data_out = {
                             'action': 'SCC',
-                            'topic': "_COMMAND/OUT",
+                            'topic': '',
                             'family': '',
                             'deviceId': '',
                             'param': '',
