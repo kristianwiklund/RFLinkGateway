@@ -100,4 +100,4 @@ class MQTTClient(multiprocessing.Process):
                 self.publish(task)
             else:
                 time.sleep(0.01)
-            self._mqttConn.loop()
+            self._mqttConn.loop(0.05)
