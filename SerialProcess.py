@@ -4,9 +4,6 @@ import time
 
 import serial
 
-#TODO keepalive i obsluga resetu
-
-
 class SerialProcess(multiprocessing.Process):
     def __init__(self, messageQ, commandQ, config):
         self.logger = logging.getLogger('RFLinkGW.SerialProcessing')
@@ -24,6 +21,11 @@ class SerialProcess(multiprocessing.Process):
         self.processing_exception = config['rflink_direct_output_params']
         self.ignored_devices = config['rflink_ignored_devices']
         self.logger.info("Ignoring devices: %s", self.ignored_devices)
+
+    def signedhex2dec(value):
+        val = int(value, 16)
+        if val >= 0x8000: val = -1*(val - 0x8000)
+        return val
 
     def close(self):
         self.sp.close()
@@ -53,7 +55,7 @@ class SerialProcess(multiprocessing.Process):
                         if key in self.processing_exception:
                             val = d[key]
                         else:
-                            val = int(d[key], 16) / 10.0
+                            val = signedhex2dec(d[key]) / 10.0
                         data_out = {
                             'action': 'NCC',
                             'topic': '',
