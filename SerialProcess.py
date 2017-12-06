@@ -55,7 +55,7 @@ class SerialProcess(multiprocessing.Process):
                         if key in self.processing_exception:
                             val = d[key]
                         else:
-                            val = signedhex2dec(d[key]) / 10.0
+                            val = self.signedhex2dec(d[key]) / 10.0
                         data_out = {
                             'action': 'NCC',
                             'topic': '',
