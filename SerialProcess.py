@@ -22,7 +22,7 @@ class SerialProcess(multiprocessing.Process):
         self.ignored_devices = config['rflink_ignored_devices']
         self.logger.info("Ignoring devices: %s", self.ignored_devices)
 
-    def signedhex2dec(value):
+    def signedhex2dec(self, value):
         val = int(value, 16)
         if val >= 0x8000: val = -1*(val - 0x8000)
         return val
