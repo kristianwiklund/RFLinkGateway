@@ -71,7 +71,7 @@ Output data
 Application pushes informations to MQTT broker in following format:
 [mqtt_prefix]/[device_type]/[device_id]/R/[parameter]
 
-`rflink/TriState/8556a8/W/1 OFF`
+`rflink/TriState/8556a8/R/1 OFF`
 
 Every change should be published to topic:
 [mqtt_prefix]/[device_type]/[device_id]/W/[switch_ID]
