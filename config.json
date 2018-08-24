@@ -6,6 +6,7 @@
   "mqtt_prefix": "rflink",
   "mqtt_message_timeout": 60,
   "rflink_tty_device": "/dev/ttyUSB0",
+  "mqtt_switch_incl_topic": "true",
   "rflink_direct_output_params": [
     "message",
     "BAT",
