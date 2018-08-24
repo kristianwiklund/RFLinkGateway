@@ -21,6 +21,13 @@ class SerialProcess(multiprocessing.Process):
         self.processing_exception = config['rflink_direct_output_params']
         self.ignored_devices = config['rflink_ignored_devices']
         self.logger.info("Ignoring devices: %s", self.ignored_devices)
+        
+        self.switch_incl_topic = config['mqtt_switch_incl_topic']
+        
+        self.switch_index=-1
+        self.switch_num=-1
+        if self.switch_incl_topic == "true":
+            self.logger.info("Including Switch number in Topic")
 
     def signedhex2dec(self, value):
         val = int(value, 16)
@@ -44,6 +51,22 @@ class SerialProcess(multiprocessing.Process):
             if len(data) > 3 and data[0] == '20' and data[2].split("=")[0] != 'VER' : # Special Control Command 'VERSION' returns a len=5 data object. This trick is necessary... but not very clean
                 family = data[2]
                 deviceId = data[3].split("=")[1]  # TODO: For some debug messages there is no =
+                
+                #handle switch re-inclusion in CMD(after the /R/)
+                if self.switch_incl_topic == "true":
+                    tokens=["dummy","dummy","dummy","dummy"]
+                    for t in data[4:]:
+                        tokens.append(t.split("=")[0])
+                    if "SWITCH" in tokens:
+                        self.logger.debug('switch recognizd in the data, including it in CMD if present')
+                        self.switch_index=tokens.index("SWITCH")
+                        self.logger.debug("switch index in data : " + str(self.switch_index ) + ";" + tokens[self.switch_index] + ";" + data[self.switch_index] )
+                        self.switch_num=data[self.switch_index]
+                        self.switch_num=self.switch_num.split("=")[1]
+                        self.switch_num=int(self.switch_num)
+                        data.pop(self.switch_index)
+
+                
                 if (deviceId not in self.ignored_devices and
                     family not in self.ignored_devices and
                     "%s/%s" % (family, deviceId) not in self.ignored_devices):
@@ -56,12 +79,19 @@ class SerialProcess(multiprocessing.Process):
                             val = d[key]
                         else:
                             val = self.signedhex2dec(d[key]) / 10.0
+                        
+                        #handle switch re-inclusion in CMD(after the /R/, before the "CMD")
+                        if key == "CMD" and self.switch_incl_topic == "true" and self.switch_num > 0:
+                            keymod =  str(self.switch_num) + "/CMD"
+                        else:
+                            keymod = key
+                        
                         data_out = {
                             'action': 'NCC',
                             'topic': '',
                             'family': family,
                             'deviceId': deviceId,
-                            'param': key,
+                            'param': keymod,
                             'payload': str(val),
                             'qos': 1,
                             'timestamp': time.time()
