@@ -63,7 +63,7 @@ class SerialProcess(multiprocessing.Process):
                         self.logger.debug("switch index in data : " + str(self.switch_index ) + ";" + tokens[self.switch_index] + ";" + data[self.switch_index] )
                         self.switch_num=data[self.switch_index]
                         self.switch_num=self.switch_num.split("=")[1]
-                        self.switch_num=int(self.switch_num)
+                        self.switch_num=int(self.switch_num,16)
                         data.pop(self.switch_index)
 
                 
@@ -81,7 +81,7 @@ class SerialProcess(multiprocessing.Process):
                             val = self.signedhex2dec(d[key]) / 10.0
                         
                         #handle switch re-inclusion in CMD(after the /R/, before the "CMD")
-                        if key == "CMD" and self.switch_incl_topic == "true" and self.switch_num > 0:
+                        if key == "CMD" and self.switch_incl_topic == "true" and self.switch_num >= 0:
                             keymod =  str(self.switch_num) + "/CMD"
                         else:
                             keymod = key
