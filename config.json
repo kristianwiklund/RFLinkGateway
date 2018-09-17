@@ -1,28 +1,31 @@
 {
-  "mqtt_host": "mqtt.home",
-  "mqtt_port": 1883,
-  "mqtt_user": "user",
-  "mqtt_password": "password",
-  "mqtt_prefix": "rflink",
-  "mqtt_message_timeout": 60,
-  "rflink_tty_device": "/dev/ttyUSB0",
-  "mqtt_switch_incl_topic": "true",
-  "rflink_direct_output_params": [
-    "message",
-    "BAT",
-    "CMD",
-    "SET_LEVEL",
-    "SWITCH",
-    "HUM",
-    "HSTATUS",
-    "CHIME",
-    "PIR",
-    "SMOKEALERT"
-  ],
-  "rflink_ignored_devices": [
-    "Friedland", 
-    "Oregon Temp/FD10",
-    "BL999",
-    "RTS"
-  ]
-}
+    "mqtt_host": "mqtt.home",
+    "mqtt_port": 1883,
+    "mqtt_user": "user",
+    "mqtt_password": "password",
+    "mqtt_prefix": "rflink",
+    "mqtt_message_timeout": 60,
+    "mqtt_switch_incl_topic": "true",
+    "mqtt_json": "true",
+    "mqtt_include_message": "false",  
+    "rflink_tty_device": "/dev/ttyUSB0",
+    "rflink_direct_output_params": [
+      "message",
+      "BAT",
+      "CMD",
+      "SET_LEVEL",
+      "SWITCH",
+      "HUM",
+      "HSTATUS",
+      "CHIME",
+      "PIR",
+      "SMOKEALERT"
+    ],
+    "rflink_ignored_devices": [
+      "Friedland", 
+      "Oregon Temp/FD10",
+      "BL999",
+      "RTS"
+    ]
+  }
+  
