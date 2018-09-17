@@ -13,7 +13,7 @@ to MQTT broker in both directions.
 Every message received from RFLinkGateway is split into single parameters
 and published to different MQTT topics.
 
-Example:
+Examples:
 
 Message:
 `20;83;Oregon Rain2;ID=2a19;RAIN=002a;RAINTOT=0054;BAT=OK;`
@@ -26,9 +26,16 @@ is translated to following topics:
 
 - `rflink/Oregon Rain2/2a19/R/BAT OK`
 
+The whole message can also be sent on its own topic in addition to the previous behavior:
 
-Every message received on particular MQTT topic is translated to
-RFLink Gateway and sent to 433 MHz.
+- `rflink/Oregon Rain2/2a19/R/message 20;83;Oregon Rain2;ID=2a19;RAIN=002a;RAINTOT=0054;BAT=OK;`
+
+Or a JSON formated output can also be used. In this particular case, there is only one message sent to a single topic, but with a more convenient format:
+
+- `rflink/Oregon Rain2/2a19/R/message {"RAIN": "002a", "RAINTOT": "0054", "BAT": "OK"}`
+
+Every message received on particular MQTT topics is transmitted to
+RFLink Gateway and sent to the right 433 MHz device.
 
 Configuration
 ----------------------
@@ -50,10 +57,16 @@ Then, the configuration of the gateway itself can be defined in the JSON configu
 {
   "mqtt_host": "your.mqtt.host",
   "mqtt_port": 1883,
+  "mqtt_user": "user",
+  "mqtt_password": "password",
   "mqtt_prefix": "rflink",
+  "mqtt_message_timeout": 60,
+  "mqtt_switch_incl_topic": "true",
+  "mqtt_json": "true",
+  "mqtt_include_message": "false",  
   "rflink_tty_device": "/dev/ttyUSB0",
   "rflink_direct_output_params": ["BAT", "CMD", "SET_LEVEL", "SWITCH", "HUM", "HSTATUS", "CHIME", "PIR", "SMOKEALERT"],
-  "rflink_ignored_devices": ["CD23", "12EA"]
+  "rflink_ignored_devices": ["CD23", "12EA", "Alecto V4", "Oregon TempHygro/328AB"]
 }
 ```
 
@@ -62,9 +75,12 @@ Config param | Meaning
 | mqtt_host | MQTT broker host |
 | mqtt_port | MQTT broker port |
 | mqtt_prefix | Prefix for publish and subscribe topic (no slash at the end) |
+| mqtt_switch_incl_topic | Include (or not) SWITCH number in the topic name instead of in the payload |
+| mqtt_include_message | Send to MQTT the full message (containing all information) in addition to individual informations |
+| mqtt_json_format | Format the payload as a JSON string. Act as a pretty convenient alternative to full message + individual infos |
 | rflink_tty_device | RFLink tty device |
 | rflink_direct_output_params | Parameters transferred to MQTT without any processing |
-| rflink_ignored_devices | Devices not taken into account (for both read and write) |
+| rflink_ignored_devices | Devices not taken into account (for both read and write). Values can be: devices id, family values or 'family/device' couples |
 
 Output data
 ----------------------
@@ -82,7 +98,7 @@ Every change should be published to topic:
 Special Control Commands
 ----------------------
 
-It is now possible to send Special Control Command (ex. 10;PING) to $mqtt_refix/_COMMAND/IN and receive the response on $mqtt_prefix/_COMMAND/OUT.
+It is now possible to send Special Control Command (aka SCC) (ex. 10;PING) to $mqtt_prefix/_COMMAND/IN and receive the response on $mqtt_prefix/_COMMAND/OUT.
 
 
 References
