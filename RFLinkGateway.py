@@ -70,10 +70,9 @@ def main():
     time.sleep(1)
     options.parse_command_line()
 
-    mainLoop = tornado.ioloop.IOLoop.instance()
-    mainLoop.start()
+    main_loop = tornado.ioloop.IOLoop.instance()
+    main_loop.start()
 
 
 if __name__ == "__main__":
     main()
-
