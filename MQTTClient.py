@@ -20,7 +20,7 @@ class MQTTClient(multiprocessing.Process):
         self.host = config['mqtt_host']
         self.port = config['mqtt_port']
 
-        self.mqttDataPrefix = config['mqtt_prefix']
+        self.mqtt_data_prefix = config['mqtt_prefix']
         self._mqttConn = mqtt.Client(client_id='RFLinkGateway')
         if config['mqtt_user'] is not None:
             self.logger.info("Connection with credentials (user: %s).", config['mqtt_user'])
@@ -40,7 +40,7 @@ class MQTTClient(multiprocessing.Process):
     def _on_connect(self, client, userdata, flags, rc):
         if rc == 0:
             self.logger.info("Connected to broker. Return code: %s" % mqtt.connack_string(rc))
-            self._mqttConn.subscribe([ ("%s/+/+/W/+" % self.mqttDataPrefix, 2), ("%s/_COMMAND/IN" % self.mqttDataPrefix, 2) ])
+            self._mqttConn.subscribe([ ("%s/+/+/W/+" % self.mqtt_data_prefix, 2), ("%s/_COMMAND/IN" % self.mqtt_data_prefix, 2) ])
         else:
             self.logger.warning("An error occured on connect. Return code: %s " % mqtt.connack_string(rc))
 
@@ -52,26 +52,26 @@ class MQTTClient(multiprocessing.Process):
         self.logger.debug("Message " + str(mid) + " published.")
 
     def _on_message(self, client, userdata, message):
-        if message.topic == (self.mqttDataPrefix + "/_COMMAND/IN"):
+        if message.topic == (self.mqtt_data_prefix + "/_COMMAND/IN"):
             payload = message.payload.decode('ascii')
             self.logger.debug('Special Control Command received: %s' % (payload))
             data_out = {
                 'action': 'SCC',
                 'topic': message.topic,
                 'family': '',
-                'deviceId': '',
+                'device_id': '',
                 'param': '',
                 'payload': payload,
                 'qos': 1
              }
         else:
             self.logger.debug("Message received on topic: %s" % (message.topic))
-            data = message.topic.replace(self.mqttDataPrefix + "/", "").split("/")
+            data = message.topic.replace(self.mqtt_data_prefix + "/", "").split("/")
             data_out = {
                 'action': 'NCC',
                 'topic': message.topic,
                 'family': data[0],
-                'deviceId': data[1],
+                'device_id': data[1],
                 'param': data[3],
                 'payload': message.payload.decode('ascii'),
                 'qos': 1
@@ -80,13 +80,13 @@ class MQTTClient(multiprocessing.Process):
 
     def publish(self, task):
         if len(task['family']) > 0:
-            subtopic = "%s/%s/R/%s" % (task['family'], task['deviceId'], task['param'])
+            subtopic = "%s/%s/R/%s" % (task['family'], task['device_id'], task['param'])
         else:
             subtopic = "_COMMAND/OUT"
-        topic = "%s/%s" % (self.mqttDataPrefix, subtopic)
+        topic = "%s/%s" % (self.mqtt_data_prefix, subtopic)
 
         try:
-            self.logger.debug('Sending:%s to %s' % (task, topic))
+            self.logger.info('Sending:%s to %s' % (task, topic))
             publish.single(topic, payload=task['payload'], hostname=self.host, auth=self.auth, port=self.port)
         except Exception as e:
             self.logger.error('Publish problem: %s' % (e))
