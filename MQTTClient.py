@@ -86,7 +86,7 @@ class MQTTClient(multiprocessing.Process):
         topic = "%s/%s" % (self.mqtt_data_prefix, subtopic)
 
         try:
-            self.logger.info('Sending:%s to %s' % (task, topic))
+            self.logger.debug('Sending:%s to %s' % (task, topic))
             publish.single(topic, payload=task['payload'], hostname=self.host, auth=self.auth, port=self.port)
         except Exception as e:
             self.logger.error('Publish problem: %s' % (e))
