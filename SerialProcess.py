@@ -93,7 +93,11 @@ class SerialProcess(multiprocessing.Process):
                     d = {'message': msg}
                     for t in data[4:]:
                         token = t.split("=")
-                        d[token[0]] = token[1]
+                        if token[0] in self.processing_exception:
+                            d[token[0]] = token[1]
+                        else:
+                            d[token[0]] = self.signedhex2dec(token[1]) / 10.0
+
                     if not self.include_message:
                         d.pop('message')
 
@@ -116,10 +120,7 @@ class SerialProcess(multiprocessing.Process):
                         out = [data_out]
                     else:
                         for key in d:
-                            if key in self.processing_exception:
-                                val = d[key]
-                            else:
-                                val = self.signedhex2dec(d[key]) / 10.0
+                            val = d[key]
 
                             #handle switch re-inclusion in CMD(after the /R/, before the "CMD")
                             if key == "CMD" and self.switch_incl_topic and self.switch_num >= 0:
