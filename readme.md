@@ -1,11 +1,11 @@
-RFLink Gateway to MQTT
+# RFLink Gateway to MQTT
 ======================
 
-Purpose
+## Purpose
 ----------------------
 Bridge between RFLink Gateway and MQTT broker.
 
-Current features
+## Current features
 ----------------------
 Forwarding messages received on TTY port from RFLink Gateway Arduino board
 to MQTT broker in both directions.
@@ -37,7 +37,7 @@ Or a JSON formated output can also be used. In this particular case, there is on
 Every message received on particular MQTT topics is transmitted to
 RFLink Gateway and sent to the right 433 MHz device.
 
-Configuration
+## Configuration
 ----------------------
 
 In order to start the gateway, a few parameters could be set, as ENV variables:
@@ -51,7 +51,8 @@ Env variable | Meaning | Default value
 | RFLINK_LOG_FILE | Path to the log file (file appender) | /var/log/RFLinkGateway.log |
 
 
-Then, the configuration of the gateway itself can be defined in the JSON configuration file:
+Then, the configuration of the gateway itself can be defined in the JSON configuration file.
+**NOTE: Modifications were done. The parameter 'rflink_direct_output_params' no longer exists. It is now replaced by 'rflink_output_params_processing'. Please, pay attention to the updated configuration file below**
 
 ```json
 {
@@ -65,7 +66,43 @@ Then, the configuration of the gateway itself can be defined in the JSON configu
   "mqtt_json": "true",
   "mqtt_include_message": "false",  
   "rflink_tty_device": "/dev/ttyUSB0",
-  "rflink_direct_output_params": ["BAT", "CMD", "SET_LEVEL", "SWITCH", "HUM", "HSTATUS", "CHIME", "PIR", "SMOKEALERT"],
+  "rflink_output_params_processing": {
+        "ID": [],
+        "SWITCH": [],
+        "CMD": [],
+        "SET_LEVEL": ["str2dec"],
+        "TEMP": ["shex2dec","div10"],
+        "HUM": ["str2dec"],
+        "BARO": ["hex2dec"],
+        "HSTATUS": ["str2dec"],
+        "BFORECAST": ["str2dec"],
+        "UV": ["hex2dec"],
+        "LUX": ["hex2dec"],
+        "BAT": [],
+        "RAIN": ["hex2dec","div10"],
+        "RAINRATE": ["hex2dec","div10"],
+        "WINSP": ["hex2dec","div10"],
+        "AWINSP": ["hex2dec","div10"],
+        "WINGS": ["hex2dec","div10"],
+        "WINDIR": ["mapdir"],
+        "WINCHL": ["shex2dec","div10"],
+        "WINTMP": ["shex2dec","div10"],
+        "CHIME": ["str2dec"],
+        "SMOKEALERT": [],
+        "PIR": [],
+        "CO2": [],
+        "SOUND": ["str2dec"],
+        "KWATT": ["hex2dec"],
+        "WATT": ["hex2dec"],
+        "CURRENT": ["str2dec"],
+        "CURRENT2": ["str2dec"],
+        "CURRENT3": ["str2dec"],
+        "DIST": ["str2dec"],
+        "METER": ["str2dec"],
+        "VOLT": ["str2dec"],
+        "RGBW": [],
+        "message": []
+  },
   "rflink_ignored_devices": ["CD23", "12EA", "Alecto V4", "Oregon TempHygro/328AB"]
 }
 ```
@@ -79,10 +116,27 @@ Config param | Meaning
 | mqtt_include_message | Send to MQTT the full message (containing all information) in addition to individual informations |
 | mqtt_json_format | Format the payload as a JSON string. Act as a pretty convenient alternative to full message + individual infos |
 | rflink_tty_device | RFLink tty device |
-| rflink_direct_output_params | Parameters transferred to MQTT without any processing |
+| rflink_output_params_processing | describe how to process received values |
 | rflink_ignored_devices | Devices not taken into account (for both read and write). Values can be: devices id, family values or 'family/device' couples |
 
-Output data
+### How to process received values (rflink_output_params_processing)
+
+Each value can have zero, one or more 'processors'.
+When no processor is specified (empty array : ```[]```), the value is sent as is to MQTT.
+When processors are defined, they are applied in their natural order.
+
+Available processors are :
+
+* shex2dec : convert a signed hex string to a decimal value
+* hex2dec : convert a hex string to a decimal value
+* str2dec : convert a string to a decimal value
+* div10 : divide the value by 10
+* dir2deg : convert a (wind) direction (0-15) to a degree value
+* dir2car : convert a (wind) direction (0-15) to a cardinal point (N, E, W, S, NNW, ...)
+
+That way, you can choose how to deal with each possible value.
+
+## Output data
 ----------------------
 Application pushes informations to MQTT broker in following format:
 [mqtt_prefix]/[device_type]/[device_id]/R/[parameter]
@@ -95,13 +149,13 @@ Every change should be published to topic:
 `rflink/TriState/8556a8/W/1 ON`
 
 
-Special Control Commands
+## Special Control Commands
 ----------------------
 
 It is now possible to send Special Control Command (aka SCC) (ex. 10;PING) to $mqtt_prefix/_COMMAND/IN and receive the response on $mqtt_prefix/_COMMAND/OUT.
 
 
-References
+## References
 ----------------------
 - RFLink Gateway project http://www.nemcon.nl/blog2/
 - RFLink Gateway protocol http://www.nemcon.nl/blog2/protref
