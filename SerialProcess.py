@@ -6,6 +6,26 @@ import json
 import serial
 
 class SerialProcess(multiprocessing.Process):
+
+    cardinal_pts_mapping = [
+            "N",
+            "NNE",
+            "NE",
+            "ENE",
+            "E",
+            "ESE",
+            "SE",
+            "SSE",
+            "S",
+            "SSW",
+            "SW",
+            "WSW",
+            "W",
+            "WNW",
+            "NW",
+            "NNW"
+    ]
+
     def __init__(self, messageQ, commandQ, config):
         self.logger = logging.getLogger('RFLinkGW.SerialProcessing')
 
@@ -43,17 +63,79 @@ class SerialProcess(multiprocessing.Process):
             if not self.json_format:
                 self.logger.info("   -> Full message is NOT published")
 
-        self.sp = serial.Serial()
-        self.connect()
-
-        self.processing_exception = config['rflink_direct_output_params']
+        self.output_params_processing = config['rflink_output_params_processing']
         self.ignored_devices = config['rflink_ignored_devices']
         self.logger.info("Ignoring devices: %s", self.ignored_devices)
 
-    def signedhex2dec(self, value):
-        val = int(value, 16)
-        if val >= 0x8000: val = -1*(val - 0x8000)
-        return val
+        self.sp = serial.Serial()
+        self.connect()
+
+    def process_data(self, field, value):
+        if not field in self.output_params_processing or (not self.output_params_processing[field]):
+            return value
+        else:
+            v = value
+            for processor in self.output_params_processing[field]:
+                if self.processors[processor]:
+                    v = self.processors[processor](field, v)
+            return v
+
+    def shex2dec(self, value):
+        try:
+            val = int(value, 16)
+            if val >= 0x8000: val = -1*(val - 0x8000)
+            return val
+        except:
+            pass
+        return value
+
+    def hex2dec(self, value):
+        try:
+            return int(value, 16)
+        except:
+            pass
+        return value
+
+    def str2dec(self, value):
+        try:
+            return int(value)
+        except:
+            pass
+        return value
+
+    def div10(self, value):
+        try:
+            return value / 10
+        except:
+            pass
+        return value
+
+    def dir2deg(self, value):
+        try:
+            v = int(value) * 22.5
+            return v
+        except:
+            pass
+        return value
+
+    def dir2car(self, value):
+        try:
+            dec = int(value)
+            v = SerialProcess.cardinal_pts_mapping[dec]
+            return v
+        except:
+            pass
+        return value
+
+    processors = {
+        "shex2dec" : shex2dec,
+        "hex2dec" : hex2dec,
+        "str2dec" : str2dec,
+        "dir2deg" : dir2deg,
+        "dir2car" : dir2car,
+        "div10" : div10
+    }
+
 
     def close(self):
         self.sp.close()
@@ -73,30 +155,28 @@ class SerialProcess(multiprocessing.Process):
                 family = data[2]
                 device_id = data[3].split("=")[1]  # TODO: For some debug messages there is no =
 
-                #handle switch re-inclusion in CMD(after the /R/)
-                if self.switch_incl_topic:
-                    tokens=["dummy","dummy","dummy","dummy"]
-                    for t in data[4:]:
-                        tokens.append(t.split("=")[0])
-                    if "SWITCH" in tokens:
-                        self.logger.debug('Switch recognized in the data, including it in CMD if present')
-                        self.switch_index=tokens.index("SWITCH")
-                        self.logger.debug("Switch index in data : " + str(self.switch_index ) + ";" + tokens[self.switch_index] + ";" + data[self.switch_index] )
-                        self.switch_num=data[self.switch_index]
-                        self.switch_num=self.switch_num.split("=")[1]
-                        self.switch_num=int(self.switch_num,16)
-                        data.pop(self.switch_index)
-
                 if (device_id not in self.ignored_devices and
                     family not in self.ignored_devices and
                     "%s/%s" % (family, device_id) not in self.ignored_devices):
+
+                    #handle switch re-inclusion in CMD(after the /R/)
+                    if self.switch_incl_topic:
+                        tokens=["dummy","dummy","dummy","dummy"]
+                        for t in data[4:]:
+                            tokens.append(t.split("=")[0])
+                        if "SWITCH" in tokens:
+                            self.logger.debug('Switch recognized in the data, including it in CMD if present')
+                            self.switch_index=tokens.index("SWITCH")
+                            self.logger.debug("Switch index in data : " + str(self.switch_index) + ";" + tokens[self.switch_index] + ";" + data[self.switch_index] )
+                            self.switch_num=data[self.switch_index]
+                            self.switch_num=self.switch_num.split("=")[1]
+                            self.switch_num=int(self.switch_num,16)
+                            data.pop(self.switch_index)
+
                     d = {'message': msg}
                     for t in data[4:]:
                         token = t.split("=")
-                        if token[0] in self.processing_exception:
-                            d[token[0]] = token[1]
-                        else:
-                            d[token[0]] = self.signedhex2dec(token[1]) / 10.0
+                        d[token[0]] = self.process_data(token[0], token[1])
 
                     if not self.include_message:
                         d.pop('message')
@@ -184,7 +264,7 @@ class SerialProcess(multiprocessing.Process):
                     else:
                         self.logger.debug('Nothing sent to serial: device_id (%s) is in the devices ignored list.' % (task['device_id']))
             except Exception as e:
-                self.logger.error("Send error:%s" % (format(e)))
+                self.logger.error("Send error:%s" % (e))
             try:
                 if (self.sp.inWaiting() > 0):
                     data = self.sp.readline()
