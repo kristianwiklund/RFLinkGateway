@@ -19,7 +19,7 @@
         "BARO": ["hex2dec"],
         "HSTATUS": ["str2dec"],
         "BFORECAST": ["str2dec"],
-        "UV": ["hex2dec"],
+        "UV": [["hex2dec", "div10"],["hex2dec", "div10", "uv2level"]],
         "LUX": ["hex2dec"],
         "BAT": [],
         "RAIN": ["hex2dec","div10"],
