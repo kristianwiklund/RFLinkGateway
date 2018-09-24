@@ -26,6 +26,14 @@ class SerialProcess(multiprocessing.Process):
             "NNW"
     ]
 
+    uv_mapping = [
+        "LOW", "LOW", "LOW",
+        "MED", "MED", "MED",
+        "HI", "HI",
+        "V.HI", "V.HI", "V.HI",
+        "EX.HI","EX.HI","EX.HI"
+    ]
+
     def __init__(self, messageQ, commandQ, config):
         self.logger = logging.getLogger('RFLinkGW.SerialProcessing')
 
@@ -71,13 +79,29 @@ class SerialProcess(multiprocessing.Process):
         self.connect()
 
     def process_data(self, field, value):
+        v = {field : value}
         if not field in self.output_params_processing or (not self.output_params_processing[field]):
-            return value
+            return v
         else:
-            v = value
-            for processor in self.output_params_processing[field]:
-                if self.processors[processor]:
-                    v = self.processors[processor](field, v)
+            procs = self.output_params_processing[field]
+            if isinstance(procs, list):
+                if len(procs) > 0:
+                    if isinstance(procs[0], list):
+                        i = 0
+                        for group in procs:
+                            vv = value
+                            for processor in group:
+                                if self.processors[processor]:
+                                    vv = self.processors[processor](field, vv)
+                            if i == 0:
+                                v[field] = vv
+                            else:
+                                v[field + "_ALT_" + str(i)] = vv
+                            i = i + 1
+                    else:
+                        for processor in procs:
+                            if self.processors[processor]:
+                                v[field] = self.processors[processor](field, v[field])
             return v
 
     def shex2dec(self, value):
@@ -127,13 +151,33 @@ class SerialProcess(multiprocessing.Process):
             pass
         return value
 
+    def uv2level(self, value):
+        try:
+            dec = int(value)
+            if dec >= 0 and dec <= 2:
+                return "LOW"
+            elif dec >=3 and dec <= 5:
+                return "MED"
+            elif dec >= 6 and dec <= 7:
+                return "HI"
+            elif dec >= 8 and dec <= 10:
+                return "V.HI"
+            elif dec >= 11:
+                return "EX.HI"
+            else:
+                return "ERR"
+        except:
+            pass
+        return value
+
     processors = {
         "shex2dec" : shex2dec,
         "hex2dec" : hex2dec,
         "str2dec" : str2dec,
         "dir2deg" : dir2deg,
         "dir2car" : dir2car,
-        "div10" : div10
+        "div10" : div10,
+        "uv2level" : uv2level
     }
 
 
@@ -176,7 +220,7 @@ class SerialProcess(multiprocessing.Process):
                     d = {'message': msg}
                     for t in data[4:]:
                         token = t.split("=")
-                        d[token[0]] = self.process_data(token[0], token[1])
+                        d.update(self.process_data(token[0], token[1]))
 
                     if not self.include_message:
                         d.pop('message')
