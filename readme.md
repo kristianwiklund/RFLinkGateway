@@ -123,9 +123,9 @@ Each value can have zero, one or more 'processors'.
 When no processor is specified (empty array : ```[]```), the value is sent as is to MQTT.
 When processors are defined, they are applied in their natural order.
 
-NEW: processors can be an array of arrays. In this particular case, several different values are returned for the same input. For instance, if you want to have both a numerical value AND a specific label for one input (let's say UV indice where you want the indice and a level, which is a string describing how strong UV level is), you can specify to distinct processing chains, each one in its array: ```"UV": [["hex2dec", "div10"],["hex2dec", "div10", "uv2level"]]```
+NEW: processors can be an array of arrays. In this particular case, several different values are returned for the same input. For instance, if you want to have both a numerical value AND a specific label for one input (let's say UV indice where you want the indice and a level, which is a string describing how strong UV level is), you can specify to distinct processing chains, each one in its array: ```"UV": [["hex2dec", "div10"],["hex2dec", "div10", "uv2level"]]```. The first value will be named like the received data, for instance "RAIN": ```rflink/Oregon Rain2/1b19/R/RAIN 6``` and the following derived values will be name using the same prefix ("RAIN" here) and followed by "_ALT_" and an increment starting at 1 ("RAIN_ALT_1", "RAIN_ALT_2", ....).
 
-Available processors are :
+Available processors are:
 
 * shex2dec : convert a signed hex string to a decimal value
 * hex2dec : convert a hex string to a decimal value
@@ -134,6 +134,8 @@ Available processors are :
 * dir2deg : convert a (wind) direction (0-15) to a degree value
 * dir2car : convert a (wind) direction (0-15) to a cardinal point (N, E, W, S, NNW, ...)
 * uv2level : return a string defining the level of UV depending on the value (values are coming from Oregon documentation: LOW, MED, HI...)
+
+NOTE: Processors will be declared in a dedicated file in a future release, so that you can easily provide yours.
 
 That way, you can choose how to deal with each possible value.
 
