@@ -4,35 +4,9 @@ import time
 import json
 
 import serial
+import Processors
 
 class SerialProcess(multiprocessing.Process):
-
-    cardinal_pts_mapping = [
-            "N",
-            "NNE",
-            "NE",
-            "ENE",
-            "E",
-            "ESE",
-            "SE",
-            "SSE",
-            "S",
-            "SSW",
-            "SW",
-            "WSW",
-            "W",
-            "WNW",
-            "NW",
-            "NNW"
-    ]
-
-    uv_mapping = [
-        "LOW", "LOW", "LOW",
-        "MED", "MED", "MED",
-        "HI", "HI",
-        "V.HI", "V.HI", "V.HI",
-        "EX.HI","EX.HI","EX.HI"
-    ]
 
     def __init__(self, messageQ, commandQ, config):
         self.logger = logging.getLogger('RFLinkGW.SerialProcessing')
@@ -91,8 +65,8 @@ class SerialProcess(multiprocessing.Process):
                         for group in procs:
                             vv = value
                             for processor in group:
-                                if self.processors[processor]:
-                                    vv = self.processors[processor](field, vv)
+                                if Processors.processors[processor]:
+                                    vv = Processors.processors[processor](vv)
                             if i == 0:
                                 v[field] = vv
                             else:
@@ -100,86 +74,9 @@ class SerialProcess(multiprocessing.Process):
                             i = i + 1
                     else:
                         for processor in procs:
-                            if self.processors[processor]:
-                                v[field] = self.processors[processor](field, v[field])
+                            if Processors.processors[processor]:
+                                v[field] = Processors.processors[processor](v[field])
             return v
-
-    def shex2dec(self, value):
-        try:
-            val = int(value, 16)
-            if val >= 0x8000: val = -1*(val - 0x8000)
-            return val
-        except:
-            pass
-        return value
-
-    def hex2dec(self, value):
-        try:
-            return int(value, 16)
-        except:
-            pass
-        return value
-
-    def str2dec(self, value):
-        try:
-            return int(value)
-        except:
-            pass
-        return value
-
-    def div10(self, value):
-        try:
-            return value / 10
-        except:
-            pass
-        return value
-
-    def dir2deg(self, value):
-        try:
-            v = int(value) * 22.5
-            return v
-        except:
-            pass
-        return value
-
-    def dir2car(self, value):
-        try:
-            dec = int(value)
-            v = SerialProcess.cardinal_pts_mapping[dec]
-            return v
-        except:
-            pass
-        return value
-
-    def uv2level(self, value):
-        try:
-            dec = int(value)
-            if dec >= 0 and dec <= 2:
-                return "LOW"
-            elif dec >=3 and dec <= 5:
-                return "MED"
-            elif dec >= 6 and dec <= 7:
-                return "HI"
-            elif dec >= 8 and dec <= 10:
-                return "V.HI"
-            elif dec >= 11:
-                return "EX.HI"
-            else:
-                return "ERR"
-        except:
-            pass
-        return value
-
-    processors = {
-        "shex2dec" : shex2dec,
-        "hex2dec" : hex2dec,
-        "str2dec" : str2dec,
-        "dir2deg" : dir2deg,
-        "dir2car" : dir2car,
-        "div10" : div10,
-        "uv2level" : uv2level
-    }
-
 
     def close(self):
         self.sp.close()
