@@ -134,8 +134,12 @@ Available processors are:
 * dir2deg : convert a (wind) direction (0-15) to a degree value
 * dir2car : convert a (wind) direction (0-15) to a cardinal point (N, E, W, S, NNW, ...)
 * uv2level : return a string defining the level of UV depending on the value (values are coming from Oregon documentation: LOW, MED, HI...)
+* wind2level : return a string defining the strength of the wind, from Oregon's documentation
 
-NOTE: Processors will be declared in a dedicated file in a future release, so that you can easily provide yours.
+NOTE: Processors are declared in Processors.py file.
+New processors can be added.
+You just have to create a new function and define it in the dictionary, called 'processors', at the end of the file.
+If your syntax is Python3 compliant, it should just work! :-)
 
 That way, you can choose how to deal with each possible value.
 
