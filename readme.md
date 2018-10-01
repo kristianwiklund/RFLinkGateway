@@ -1,5 +1,9 @@
 # RFLink Gateway to MQTT
 
+## IMPORTANT
+
+Python 3 only
+
 ## Purpose
 
 Bridge between RFLink Gateway and MQTT broker.
