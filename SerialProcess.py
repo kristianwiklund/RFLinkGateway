@@ -111,7 +111,6 @@ class SerialProcess(multiprocessing.Process):
                             self.logger.debug("Switch index in data : " + str(self.switch_index) + ";" + tokens[self.switch_index] + ";" + data[self.switch_index] )
                             self.switch_num=data[self.switch_index]
                             self.switch_num=self.switch_num.split("=")[1]
-                            self.switch_num=int(self.switch_num,16)
                             data.pop(self.switch_index)
 
                     d = {'message': msg}
@@ -123,8 +122,8 @@ class SerialProcess(multiprocessing.Process):
                         d.pop('message')
 
                     if self.json_format:
-                        if self.switch_incl_topic and self.switch_num >= 0:
-                            keymod =  str(self.switch_num) + "/message"
+                        if self.switch_incl_topic:
+                            keymod =  self.switch_num + "/message"
                         else:
                             keymod =  'message'
 
