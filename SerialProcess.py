@@ -123,7 +123,7 @@ class SerialProcess(multiprocessing.Process):
 
                     if self.json_format:
                         if self.switch_incl_topic:
-                            keymod =  self.switch_num + "/message"
+                            keymod =  str(self.switch_num) + "/message"
                         else:
                             keymod =  'message'
 
