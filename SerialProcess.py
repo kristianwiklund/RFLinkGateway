@@ -191,6 +191,7 @@ class SerialProcess(multiprocessing.Process):
                 self.logger.debug('Serial connection established')
             except Exception as e:
                 self.logger.error('Serial port is closed %s' % (e))
+                time.sleep(5)
 
     def run(self):
         self.sp.flushInput()
