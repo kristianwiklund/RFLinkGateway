@@ -143,7 +143,7 @@ class SerialProcess(multiprocessing.Process):
                             val = d[key]
 
                             #handle switch re-inclusion in CMD(after the /R/, before the "CMD")
-                            if key == "CMD" and self.switch_incl_topic and self.switch_num >= 0:
+                            if key == "CMD" and self.switch_incl_topic and int(self.switch_num) >= 0:
                                 keymod =  str(self.switch_num) + "/CMD"
                             else:
                                 keymod = key
