@@ -118,6 +118,7 @@ Config param | Meaning
 | mqtt_include_message | Send to MQTT the full message (containing all information) in addition to individual informations |
 | mqtt_json_format | Format the payload as a JSON string. Act as a pretty convenient alternative to full message + individual infos |
 | rflink_tty_device | RFLink tty device |
+| rflink_gateway_uri | See pyserial docs for URI formats. Allows connection to e.g. an rflink proxy server. Only used if rflink_tty_device is not present in configuration!
 | rflink_output_params_processing | describe how to process received values |
 | rflink_ignored_devices | Devices not taken into account (for both read and write). Values can be: devices id, family values or 'family/device' couples |
 
