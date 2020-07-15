@@ -17,7 +17,15 @@ class SerialProcess(multiprocessing.Process):
         self.messageQ = messageQ
         self.commandQ = commandQ
 
-        self.gateway_port = config['rflink_tty_device']
+        if 'rflink_tty_device' in config:
+            self.gateway_port = config['rflink_tty_device']
+        else:
+            if 'rflink_gateway_uri' in config:
+                self.gateway_uri = config['rflink_gateway_uri']
+            else:
+                self.logger.error("Config load failed - no gateway device/uri")
+                exit(1)
+            
         self.json_format = None
         if 'mqtt_json' in config and config['mqtt_json'] == 'true':
             self.json_format = True
@@ -49,9 +57,14 @@ class SerialProcess(multiprocessing.Process):
         self.ignored_devices = config['rflink_ignored_devices']
         self.logger.info("Ignoring devices: %s", self.ignored_devices)
 
-        self.sp = serial.Serial()
-        self.connect()
 
+        if 'rflink_tty_device' in config:            
+            self.sp = serial.Serial()
+            self.connect()
+        else:
+            self.sp = serial.serial_for_url(self.gateway_uri)
+            self.connect_uri()
+            
     def process_data(self, field, value):
         v = {field : value}
         if not field in self.output_params_processing or (not self.output_params_processing[field]):
@@ -191,6 +204,16 @@ class SerialProcess(multiprocessing.Process):
                 self.logger.debug('Serial connection established')
             except Exception as e:
                 self.logger.error('Serial port is closed %s' % (e))
+                time.sleep(5)
+
+    def connect_uri(self):
+        self.logger.info('Connecting to URI')
+        while not self.sp.isOpen():
+            try:
+                self.sp = serial.serial_for_url(self.gateway_uri, timeout=1)
+                self.logger.debug('URI connection established')
+            except Exception as e:
+                self.logger.error('URI is closed %s' % (e))
                 time.sleep(5)
 
     def run(self):
