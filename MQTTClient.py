@@ -22,7 +22,7 @@ class MQTTClient(multiprocessing.Process):
 
         self.mqtt_data_prefix = config['mqtt_prefix']
         self._mqttConn = mqtt.Client(client_id='RFLinkGateway')
-        if config['mqtt_user'] is not None:
+        if 'mqtt_user' in config and config['mqtt_user'] is not None:
             self.logger.info("Connection with credentials (user: %s).", config['mqtt_user'])
             self._mqttConn.username_pw_set(username=config['mqtt_user'], password=config['mqtt_password'])
             self.auth = {'username': config['mqtt_user'], 'password': config['mqtt_password']}
